@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="jdbc.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="jms.properties" ignore-unresolvable="true"/>
+
+    <bean id="tasksConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://192.168.4.81:61616"/>
+        <property name="redeliveryPolicy">
+            <bean class="org.apache.activemq.RedeliveryPolicy">
+                <property name="maximumRedeliveries" value="-1"/>
+                <property name="initialRedeliveryDelay" value="10000"/>
+                <property name="useExponentialBackOff" value="true"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="tasksJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="tasksConnectionFactory"/>
+    </bean>
+
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="url" value="jdbc:postgresql://192.168.5.201:5432/lsd"/>
+        <property name="username" value="jenkins"/>
+        <property name="password" value="OogahG6aec"/>
+    </bean>
+
+    <bean class="cz.atria.lsd.util.service.EhrProtocolQueryService">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jmsTemplate" ref="tasksJmsTemplate"/>
+    </bean>
+</beans>
